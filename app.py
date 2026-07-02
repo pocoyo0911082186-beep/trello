@@ -1,163 +1,50 @@
+import os
+import requests
 import streamlit as st
 
-import datetime
 
-import pandas as pd
-
-from streamlit_gsheets import GSheetsConnection
-
-now = datetime.datetime.now()
-s = now.strftime("%Y-%m-%d")
-s = s.split("-")
-s = str(int(s[1])) + "/" + str(int(s[2]))
-
-st.set_page_config(layout="wide")
-
-st.title(" 階段四終極完成版：GitHub 雲端同步 Trello 看板")
-
-st.caption("授權標註：edit by 闕河正 | 完整功能版")
-
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-df = conn.read(worksheet="Tasks", ttl="0")
-
-# ==========================================
-
-#  區塊一：上方新增任務輸入表單
-
-# ==========================================
-
-st.write("###  指派新任務")
-
-with st.form("task_input_form", clear_on_submit=True):
-
-    c_title, c_status, c_owner = st.columns([2, 1, 1]) # 運用權重比例切分表單
-
-    with c_title:
-
-        new_title = st.text_input(" 任務名稱", placeholder="輸入任務名稱...")
-
-    with c_status:
-
-        new_status = st.selectbox(" 狀態", ["To Do", "In Progress", "Done"])
-
-    with c_owner:
-
-        new_owner = st.text_input(" 負責人", placeholder="誰來負責...")
-
+def send_discord_webhook(webhook_url, title, content):
+    """直接發送漂亮的卡片訊息到 Discord"""
+    payload = {
+        "content": "!! **來自 Streamlit 網頁的即時通知！**",
+        "embeds": [
+            {
+                "title": f"!! {title}",
+                "description": content,
+                "color": 5763719,  # 綠色邊條 (十進位顏色碼)
+                "footer": {
+                    "text": "由 Streamlit 按鈕手動觸發"
+                }
+            }
+        ]
+    }
     
+    # 發送 POST 請求給 Discord
+    response = requests.post(webhook_url, json=payload)
+    return response.status_code
 
-    submit_btn = st.form_submit_button("確認指派並同步雲端")
 
-if submit_btn and new_title and new_owner:
+st.set_page_config(page_title="Discord 通知控制台", page_icon="!")
 
-    new_data = {"title": new_title, "status": new_status, "owner": new_owner}
+st.title("Discord Webhook 測試控制台")
 
-    new_row = pd.DataFrame([new_data])
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
-    #  核心安全：新版 Python 廢棄 .append()，在雲端必須改用 pd.concat() 進行表格拼接
 
-    updated_df = pd.concat([df, new_row], ignore_index=True)
+input_title = st.text_input("請輸入通知標題：", value="測試通知")
+input_content = st.text_area("請輸入通知內容：", value="這是一則從 Streamlit 網頁直接觸發的 Discord 訊息！")
 
-    conn.update(worksheet="Tasks", data=updated_df)
+st.divider() # 畫一條分隔線
 
-    st.success(" 資料已跨越限制，成功同步寫入 Google 試算表！")
 
-    st.rerun() # 強制網頁自我重整，重新讀取，讓新卡片亮起來
-
-st.write("---")
-
-# ==========================================
-
-#  區塊二：下方 Trello 三縱欄畫布與卡片渲染
-
-# ==========================================
-
-st.write("###  看板動態狀態監控")
-
-trello_col1, trello_col2, trello_col3 = st.columns(3)
-
-#  【第一欄：To Do】
-
-with trello_col1:
-
-    st.markdown("### <span style='color:red'> To Do (待辦)</span>", unsafe_allow_html=True)
-
-    todo_list = df[df["status"] == "To Do"] # 階段三學的濾網分流
-
-    
-
-    if not todo_list.empty:
-
-        for idx, row in todo_list.iterrows(): # 階段 3.5 學的迴圈點名
-
-            #  呼叫 border=True，幫每筆點名到的資料揉出一個精緻卡片外框
-
-            with st.container(border=True):
-
-                st.write(f"** {row['title']}**")      # 粗體印出任務名稱
-                
-                st.caption(f"負責人: {row['owner']}")   # 灰色小字印出負責人
-                if row['deadline'] == s:
-                    st.error("sb")
-                st.caption(f"到期日: {row['deadline']}") 
-
+if st.button("! 點我立馬發送通知到 Discord"):
+    if not WEBHOOK_URL:
+        st.error("XX! 找不到 Discord Webhook 網址！請確保您已在 Streamlit 的 Secrets 中設定 `DISCORD_WEBHOOK_URL`。")
     else:
-
-        st.info("暫無待辦任務")
-
-#  【第二欄：In Progress】
-
-with trello_col2:
-
-    st.markdown("### <span style='color:orange'> In Progress (執行中)</span>", unsafe_allow_html=True)
-
-    ip_list = df[df["status"] == "In Progress"]
-
-    
-
-    if not ip_list.empty:
-
-        for idx, row in ip_list.iterrows():
-
-            with st.container(border=True):
-
-                st.write(f"** {row['title']}**")
-
-                st.caption(f"負責人: {row['owner']}")
-                if row['deadline'] == s:
-                    st.error("sb")
-                st.caption(f"到期日: {row['deadline']}") 
-
-    else:
-
-        st.info("暫無執行中任務")
-
-#  【第三欄：Done】
-
-with trello_col3:
-
-    st.markdown("### <span style='color:green'> Done (已完成)</span>", unsafe_allow_html=True)
-
-    done_list = df[df["status"] == "Done"]
-
-    
-
-    if not done_list.empty:
-
-        for idx, row in done_list.iterrows():
-
-            with st.container(border=True):
-
-                #  貼心小視覺：用 文字 幫已完成的任務加上刪除線，更有完工的體感！
-
-                st.write(f"** {row['title']}**")
-
-                st.caption(f"負責人: {row['owner']}")
-                if row['deadline'] == s:
-                    st.error("sb")
-                st.caption(f"到期日: {row['deadline']}") 
-
-    else:
-
-        st.info("暫無已完成任務")
+        with st.spinner("正在將訊息打包衝向 Discord..."):
+            status = send_discord_webhook(WEBHOOK_URL, input_title, input_content)
+            
+            if status == 204:
+                st.success("O 發送成功！快去你的 Discord 頻道看看有沒有跳出訊息！")
+            else:
+                st.error(f"X 發送失敗，Discord 回傳狀態碼：{status}")
