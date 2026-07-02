@@ -96,7 +96,7 @@ with trello_col1:
             with st.container(border=True):
 
                 st.write(f"** {row['title']}**")      # 粗體印出任務名稱
-                st.error(s+"----"+row['deadline'])
+                
                 st.caption(f"負責人: {row['owner']}")   # 灰色小字印出負責人
                 if row['deadline'] == s:
                     st.error("sb")
