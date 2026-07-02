@@ -1,8 +1,15 @@
 import streamlit as st
 
+import datetime
+
 import pandas as pd
 
 from streamlit_gsheets import GSheetsConnection
+
+now = datetime.datetime.now()
+s = now.strftime("%Y-%m-%d")
+s.split("-")
+s = str(int(s[1])) + "-" + str(int(s[2]))
 
 st.set_page_config(layout="wide")
 
@@ -91,6 +98,8 @@ with trello_col1:
                 st.write(f"** {row['title']}**")      # 粗體印出任務名稱
 
                 st.caption(f"負責人: {row['owner']}")   # 灰色小字印出負責人
+                if row['deadline'] == s:
+                    st.error("sb")
                 st.caption(f"到期日: {row['deadline']}") 
 
     else:
@@ -116,6 +125,8 @@ with trello_col2:
                 st.write(f"** {row['title']}**")
 
                 st.caption(f"負責人: {row['owner']}")
+                if row['deadline'] == s:
+                    st.error("sb")
                 st.caption(f"到期日: {row['deadline']}") 
 
     else:
@@ -143,6 +154,8 @@ with trello_col3:
                 st.write(f"** {row['title']}**")
 
                 st.caption(f"負責人: {row['owner']}")
+                if row['deadline'] == s:
+                    st.error("sb")
                 st.caption(f"到期日: {row['deadline']}") 
 
     else:
