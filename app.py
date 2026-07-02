@@ -128,7 +128,7 @@ with trello_col1:
                         st.error("XX! 找不到 Discord Webhook 網址！請確保您已在 Streamlit 的 Secrets 中設定 `DISCORD_WEBHOOK_URL`。")
                     else:
                         with st.spinner("正在將訊息打包衝向 Discord..."):
-                            status = send_discord_webhook(WEBHOOK_URL, input_title, input_content)
+                            status = send_discord_webhook(WEBHOOK_URL, "bp4j4wj/4y ", row['title'])
                             
                             if status == 204:
                                 st.success("O 發送成功！快去你的 Discord 頻道看看有沒有跳出訊息！")
