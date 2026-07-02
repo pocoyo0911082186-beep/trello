@@ -9,7 +9,7 @@ from streamlit_gsheets import GSheetsConnection
 now = datetime.datetime.now()
 s = now.strftime("%Y-%m-%d")
 s.split("-")
-s = str(int(s[1])) + "-" + str(int(s[2]))
+s = str(int(s[1])) + "/" + str(int(s[2]))
 
 st.set_page_config(layout="wide")
 
