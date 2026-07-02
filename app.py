@@ -91,6 +91,7 @@ with trello_col1:
                 st.write(f"** {row['title']}**")      # 粗體印出任務名稱
 
                 st.caption(f"負責人: {row['owner']}")   # 灰色小字印出負責人
+                st.caption(f"到期日: {row['deadline']}") 
 
     else:
 
@@ -115,6 +116,7 @@ with trello_col2:
                 st.write(f"** {row['title']}**")
 
                 st.caption(f"負責人: {row['owner']}")
+                st.caption(f"到期日: {row['deadline']}") 
 
     else:
 
@@ -141,6 +143,7 @@ with trello_col3:
                 st.write(f"** {row['title']}**")
 
                 st.caption(f"負責人: {row['owner']}")
+                st.caption(f"到期日: {row['deadline']}") 
 
     else:
 
