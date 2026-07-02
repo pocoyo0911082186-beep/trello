@@ -8,6 +8,9 @@ from streamlit_gsheets import GSheetsConnection
 
 import os
 import requests
+WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+
+
 def send_discord_webhook(webhook_url, title, content):
     """直接發送漂亮的卡片訊息到 Discord"""
     payload = {
